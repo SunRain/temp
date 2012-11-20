@@ -182,7 +182,7 @@ function mm_merge(){
       ;;
    esac
    
-   if [ "$fetchUrl" == "" ]; then
+   if [ "$remote_name" == "" ]; then
       echo "Error: remote name not found"
       return $MM_FALSE
    fi
@@ -205,6 +205,7 @@ function mm_remote() {
   repo=$2
   action=$3
   dirPath=$base/$repo
+  fetchUrl=""
   
   if [ "$repo" == "" ]; then
       echo "Error: argv 2 is null"
@@ -287,6 +288,8 @@ function mm_remote() {
        echo "Error invilid action, should [AddRemote] or [RmRemote]"
        ;;
    esac
+   
+   fetchUrl=""
 }
 
 function addCmRemote(){
