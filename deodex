@@ -1,0 +1,89 @@
+#!/bin/bash
+
+# simple deodex script
+# just for my laptop env
+# dirs like this $topDir/deodex
+#                $topDir/system/app
+#                $topdir/system/framework
+# target files would be in $topDir/out/framework and $topDir/out/app
+
+base_dir=`pwd`
+framework=$base_dir/system/framework
+app=$base_dir/system/app
+
+out_dir=$base_dir/out
+tmp_dir=$base_dir/tmp
+
+framework_out_dir=$out_dir/framework
+app_out_dir=$out_dir/app
+
+[ ! -d $out_dir ] && mkdir $out_dir
+[ ! -d $tmp_dir ] && mkdir $tmp_dir
+
+function deodex_framework() {
+
+[ ! -d $framework_out_dir ] && mkdir $framework_out_dir
+  
+cd $framework
+
+for i in `ls *.odex`
+do
+    bare_name=`echo $i | sed 's/.odex//g'`
+    
+    echo "==== bare_name is [$bare_name] ===="
+    
+    baksmali -x $i -o $tmp_dir/$bare_name
+    
+    smali $tmp_dir/$bare_name -o $tmp_dir/${bare_name}.dex
+
+    unzip $framework/$bare_name.jar -d $tmp_dir/${bare_name}_jar
+    
+    cp -fR $tmp_dir/$bare_name.dex $tmp_dir/${bare_name}_jar/classes.dex
+    
+    cd $tmp_dir/${bare_name}_jar
+    
+    zip -r $framework_out_dir/${bare_name}.jar .
+    
+    rm -r $tmp_dir/$bare_name
+    rm -r $tmp_dir/$bare_name.dex
+    rm -r $tmp_dir/${bare_name}_jar
+    
+    cd $framework
+done
+
+}
+
+function deodex_app() {
+
+[ ! -d $app_out_dir ] && mkdir $app_out_dir
+
+cd $app
+
+for i in `ls *.odex`
+do
+    bare_name=`echo $i | sed 's/.odex//g'`
+    
+    echo "==== bare_name is [$bare_name] ===="
+    
+    baksmali -x  -d $framework $i -o $tmp_dir/$bare_name
+    
+    smali $tmp_dir/$bare_name -o $tmp_dir/${bare_name}.dex
+
+    unzip $app/$bare_name.apk -d $tmp_dir/${bare_name}_apk
+    
+    cp -fR $tmp_dir/$bare_name.dex $tmp_dir/${bare_name}_apk/classes.dex
+    
+    cd $tmp_dir/${bare_name}_apk
+    
+    zip -r $app_out_dir/${bare_name}.apk .
+    
+    rm -r $tmp_dir/$bare_name
+    rm -r $tmp_dir/$bare_name.dex
+    rm -r $tmp_dir/${bare_name}_apk
+    
+    cd $app
+done
+}
+
+deodex_framework
+deodex_app
